@@ -93,6 +93,8 @@
       border-radius: 20px;
       padding: 2rem;
       min-height: 180px;
+      max-height: 420px;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -100,7 +102,6 @@
       text-align: center;
       transition: border-color .3s;
       position: relative;
-      overflow: hidden;
     }
 
     #output.has-content { animation: pop .3s ease; }
@@ -118,9 +119,9 @@
       opacity: .7;
     }
     #output .message {
-      font-size: clamp(1rem, 3vw, 1.3rem);
-      font-weight: 600;
-      line-height: 1.6;
+      font-size: clamp(0.85rem, 2vw, 1rem);
+      font-weight: 500;
+      line-height: 1.65;
     }
     #output .sub {
       font-size: .85rem;
@@ -2439,23 +2440,24 @@ The writers know this. 🔄` },
     ];
 
     // ── Reddit image fetch ────────────────────────────────────────────────────
-    // Reddit blocks direct cross-origin fetch, so we try a free CORS proxy.
-    // On GitHub Pages (HTTPS) this works reliably.
+    // Reddit blocks direct browser fetches (CORS). We route through allorigins.win,
+    // a free server-side proxy that works from any HTTPS origin (e.g. GitHub Pages).
     const subreddits = ['KDRAMAmemes', 'KDRAMA', 'koreanvariety', 'kdramarecommends'];
     const sub = pick(subreddits);
-    const redditUrl = `https://www.reddit.com/r/${sub}/hot.json?limit=100&raw_json=1`;
-    // Free CORS proxies — tried in order until one works
-    const PROXIES = [
-      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+
+    // Try both www and old.reddit — old.reddit sometimes responds better via proxy
+    const redditUrls = [
+      `https://www.reddit.com/r/${sub}/hot.json?limit=100&raw_json=1`,
+      `https://old.reddit.com/r/${sub}/hot.json?limit=100&raw_json=1`,
     ];
 
     let redditPost = null;
 
-    const urlsToTry = [redditUrl, ...PROXIES.map(p => p(redditUrl))];
-    for (const url of urlsToTry) {
+    for (const rUrl of redditUrls) {
+      if (redditPost) break;
+      const proxied = `https://api.allorigins.win/raw?url=${encodeURIComponent(rUrl)}`;
       try {
-        const res = await fetch(url, { headers: { Accept: 'application/json' } });
+        const res = await fetch(proxied);
         if (!res.ok) continue;
         const json = await res.json();
         const posts = (json?.data?.children || [])
@@ -2469,7 +2471,6 @@ The writers know this. 🔄` },
         if (posts.length) {
           redditPost = pick(posts);
           redditPost._sub = sub;
-          break;
         }
       } catch (_) {}
     }
