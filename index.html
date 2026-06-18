@@ -2000,6 +2000,73 @@ function setCard(html, color) {
   out.classList.add('has-content');
 }
 
+// ── Meme helpers ─────────────────────────────────────────────────────────────
+function memeSearchBar() {
+  return `
+    <div style="margin-top:.9rem;width:100%;display:flex;gap:.5rem;max-width:400px">
+      <input id="meme-q" type="text" placeholder="🔍 search any meme…"
+        style="flex:1;padding:.45rem .8rem;border-radius:10px;border:1px solid #2e2e4e;
+               background:#0f0f1a;color:#e8e8f0;font-family:inherit;font-size:.85rem;outline:none"
+        onkeydown="if(event.key==='Enter')searchMeme(this.value)" />
+      <button onclick="searchMeme(document.getElementById('meme-q').value)"
+        style="padding:.45rem 1rem;border-radius:10px;border:none;background:#a78bfa;
+               color:#fff;font-family:inherit;font-weight:600;cursor:pointer;font-size:.85rem">
+        Go
+      </button>
+    </div>`;
+}
+
+async function fetchAndShowMeme(query, color = COLORS.meme) {
+  const out = document.getElementById('output');
+  out.style.borderColor = color + '66';
+  // show loader
+  out.innerHTML = `<div class="loader"></div>`;
+  out.classList.remove('has-content');
+
+  let shown = false;
+  try {
+    const res = await fetch(
+      `https://g.tenor.com/v1/random?q=${encodeURIComponent(query)}&key=LIVDSRZULELA&limit=20&media_filter=minimal`
+    );
+    if (res.ok) {
+      const json = await res.json();
+      const results = json?.results || [];
+      if (results.length) {
+        const gif = pick(results);
+        const gifUrl = gif?.media?.[0]?.gif?.url || gif?.media?.[0]?.mediumgif?.url;
+        if (gifUrl) {
+          out.innerHTML = `
+            <div class="label" style="color:${color}">🎬 GIF</div>
+            <img src="${escHtml(gifUrl)}" alt="GIF" style="max-height:260px;border-radius:10px" />
+            ${memeSearchBar()}
+          `;
+          void out.offsetWidth;
+          out.classList.add('has-content');
+          shown = true;
+        }
+      }
+    }
+  } catch (_) {}
+
+  if (!shown) {
+    const kdramaMemes = window._kdramaMemes;
+    const item = pick(kdramaMemes);
+    out.innerHTML = `
+      <div class="label" style="color:${color}">🎬 K-drama moment</div>
+      <p class="message">${escHtml(item.msg).replace(/\n/g, '<br/>')}</p>
+      ${item.sub ? `<p class="sub">— ${escHtml(item.sub)}</p>` : ''}
+      ${memeSearchBar()}
+    `;
+    void out.offsetWidth;
+    out.classList.add('has-content');
+  }
+}
+
+async function searchMeme(query) {
+  if (!query || !query.trim()) return;
+  await fetchAndShowMeme(query.trim());
+}
+
 async function go(type) {
   const color = COLORS[type];
   const label = LABELS[type];
@@ -2438,66 +2505,15 @@ Hate is just love that hasn't figured itself out yet.
 
 The writers know this. 🔄` },
     ];
+    window._kdramaMemes = kdramaMemes;
 
-    // ── Reddit image fetch via allorigins.win proxy ───────────────────────────
-    // Direct Reddit fetch always fails (CORS). allorigins.win fetches server-side
-    // and works from any HTTPS origin (GitHub Pages). No key needed.
-    const subreddits = ['KDRAMAmemes', 'KDRAMA', 'koreanvariety', 'kdramarecommends'];
-    const sub = pick(subreddits);
-    // Prefer image-heavy subreddits; use both www and old.reddit for resilience
-    const redditUrls = [
-      `https://www.reddit.com/r/${sub}/hot.json?limit=100&raw_json=1`,
-      `https://old.reddit.com/r/${sub}/hot.json?limit=100&raw_json=1`,
+    // ── Tenor GIF (primary) + text meme (fallback) ───────────────────────────
+    const defaultQueries = [
+      'kdrama reaction', 'korean drama shocked', 'kdrama crying',
+      'kdrama heart flutter', 'korean drama confession',
+      'kdrama running in rain', 'korean drama slap',
     ];
-
-    let redditPost = null;
-
-    for (const rUrl of redditUrls) {
-      if (redditPost) break;
-      const proxied = `https://api.allorigins.win/raw?url=${encodeURIComponent(rUrl)}`;
-      try {
-        const res = await fetch(proxied);
-        if (!res.ok) continue;
-        const json = await res.json();
-        const posts = (json?.data?.children || [])
-          .map(c => c.data)
-          .filter(p => {
-            if (p.is_video || p.stickied) return false;
-            // Accept direct image URLs
-            if (p.url && /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(p.url)) return true;
-            // Also accept posts with a Reddit preview image
-            if (p.post_hint === 'image') return true;
-            if (p.preview?.images?.[0]?.source?.url) return true;
-            return false;
-          });
-        if (posts.length) {
-          redditPost = pick(posts);
-          // Resolve best image URL: prefer direct, fall back to preview
-          if (!/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(redditPost.url)) {
-            const preview = redditPost.preview?.images?.[0]?.source?.url;
-            if (preview) redditPost.url = preview.replace(/&amp;/g, '&');
-          }
-          redditPost._sub = sub;
-        }
-      } catch (_) {}
-    }
-
-    if (redditPost) {
-      setCard(`
-        <div class="label" style="color:${color}">🎬 r/${escHtml(redditPost._sub)}</div>
-        <p class="message">${escHtml(redditPost.title)}</p>
-        <img src="${escHtml(redditPost.url)}" alt="${escHtml(redditPost.title)}" />
-        <p class="sub">👍 ${redditPost.ups.toLocaleString()} &nbsp;·&nbsp; r/${escHtml(redditPost._sub)}</p>
-      `, color);
-    } else {
-      // Text meme fallback — always works, offline-safe
-      const item = pick(kdramaMemes);
-      setCard(`
-        <div class="label" style="color:${color}">🎬 K-drama moment</div>
-        <p class="message">${escHtml(item.msg).replace(/\n/g, '<br/>')}</p>
-        ${item.sub ? `<p class="sub">— ${escHtml(item.sub)}</p>` : ''}
-      `, color);
-    }
+    await fetchAndShowMeme(pick(defaultQueries), color);
     return;
   }
 
