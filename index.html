@@ -1,0 +1,2520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚑 WorkBreak — Your 30-Second Office Escape</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f1a;
+      --card: #1a1a2e;
+      --border: #2e2e4e;
+      --text: #e8e8f0;
+      --muted: #888aaa;
+      --entertain: #f7c948;
+      --scold:     #ff6b6b;
+      --motivate:  #4ecdc4;
+      --meme:      #a78bfa;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #f7c948, #ff6b6b, #4ecdc4, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-top: .5rem;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+
+      gap: 1rem;
+      width: 100%;
+      max-width: 560px;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 16px;
+      padding: 1.1rem 1rem;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, opacity .15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .3rem;
+    }
+    .btn span.emoji { font-size: 1.8rem; }
+    .btn:hover  { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+    .btn:active { transform: translateY(0);    box-shadow: none; opacity: .85; }
+
+    .btn-entertain { background: linear-gradient(135deg, #f7c948, #f0a500); color: #1a1200; }
+    .btn-scold     { background: linear-gradient(135deg, #ff6b6b, #c0392b); color: #fff; }
+    .btn-motivate  { background: linear-gradient(135deg, #4ecdc4, #1abc9c); color: #003530; }
+    .btn-meme      { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: #fff; }
+    .btn-lonely    { background: linear-gradient(135deg, #f9a8d4, #ec4899); color: #4a0020; grid-column: span 2; }
+
+    /* Output card */
+    #output {
+      width: 100%;
+      max-width: 560px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: border-color .3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #output.has-content { animation: pop .3s ease; }
+    @keyframes pop {
+      0%   { transform: scale(.96); opacity: .5; }
+      100% { transform: scale(1);   opacity: 1;  }
+    }
+
+    #output .label {
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: .8rem;
+      opacity: .7;
+    }
+    #output .message {
+      font-size: clamp(1rem, 3vw, 1.3rem);
+      font-weight: 600;
+      line-height: 1.6;
+    }
+    #output .sub {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-top: .6rem;
+    }
+    #output img {
+      max-width: 100%;
+      max-height: 360px;
+      border-radius: 12px;
+      margin-top: .8rem;
+    }
+    #output .placeholder {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    #output .loader {
+      width: 36px; height: 36px;
+      border: 4px solid var(--border);
+      border-top-color: var(--muted);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: .8rem;
+      text-align: center;
+    }
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🚑 WorkBreak</h1>
+  <p>Your 30-second office escape. Pick a vibe.</p>
+</header>
+
+<div class="buttons">
+  <button class="btn btn-entertain" onclick="go('entertain')">
+    <span class="emoji">🎭</span> Entertain Me
+  </button>
+  <button class="btn btn-scold" onclick="go('scold')">
+    <span class="emoji">😤</span> Scold Me
+  </button>
+  <button class="btn btn-motivate" onclick="go('motivate')">
+    <span class="emoji">💪</span> Motivate Me
+  </button>
+  <button class="btn btn-meme" onclick="go('meme')">
+    <span class="emoji">🎬</span> K-drama Meme
+  </button>
+  <button class="btn btn-lonely" onclick="go('lonely')">
+    <span class="emoji">🫂</span> I'm Lonely
+  </button>
+</div>
+
+<div id="output">
+  <p class="placeholder">👆 Pick a button to survive the workday.</p>
+</div>
+
+<footer>
+  🚑 Handcrafted to save lives by Kisyok
+</footer>
+
+<script>
+const CONTENT = {
+  entertain: [
+    { msg: "Why do programmers prefer dark mode?\n\nBecause light attracts bugs. 🐛" },
+    { msg: "I told my boss I needed a raise because three companies were after me.\n\nHe asked which ones.\n\n'The electric company, the gas company, and the water company.' 💡" },
+    { msg: "Why don't scientists trust atoms?\n\nBecause they make up everything. ⚛️" },
+    { msg: "My boss told me to have a good day.\n\nSo I went home. 🏠" },
+    { msg: "A SQL query walks into a bar, walks up to two tables and asks...\n\n'Can I join you?' 🍺" },
+    { msg: "Why did the scarecrow win an award?\n\nBecause he was outstanding in his field. 🌾" },
+    { msg: "I asked the IT guy if he could fix my computer.\n\nHe said he'd look into it. 👀" },
+    { msg: "Did you hear about the guy who invented Lifesavers?\n\nHe made a mint. 🍬" },
+    { msg: "Why is Peter Pan always flying?\n\nBecause he Neverlands. ✈️" },
+    { msg: "My resume is just a list of things I hope you never ask me to do. 📄" },
+    { msg: "Parallel lines have so much in common.\n\nIt's a shame they'll never meet. 📐" },
+    { msg: "I used to hate facial hair...\n\nBut then it grew on me. 🧔" },
+    { msg: "Why did the bicycle fall over?\n\nBecause it was two-tired. 🚲" },
+    { msg: "The early bird gets the worm.\n\nBut the second mouse gets the cheese. 🐭" },
+    { msg: "I have a joke about construction.\n\nI'm still working on it. 🏗️" },
+    // — roses are red style —
+    { msg: "Roses are red,\nviolets are blue,\nyou belong in a zoo,\nbut don't worry — I'll visit you. 🦁" },
+    { msg: "Roses are red,\nviolets are blue,\nI opened my inbox,\nnow I have 402. 📧" },
+    { msg: "Roses are red,\nviolets are blue,\nI said I'd be done by lunch,\nbut it's now quarter to two. ⏰" },
+    { msg: "Roses are red,\nviolets are blue,\nmy code was working fine,\nthen I added step two. 💻" },
+    { msg: "Roses are red,\nviolets are blue,\nthe meeting could've been an email,\nand now I have no clue. 😵" },
+    { msg: "Roses are red,\nmy coffee is too,\nI burned it at 7am,\nand I blame all of you. ☕" },
+    { msg: "Roses are red,\ndeadlines are cruel,\nI looked productive all day,\nbut used zero brain fuel. 🧠" },
+    { msg: "Roses are red,\nWi-Fi is blue,\ncall dropped mid-presentation,\nnow what do I do? 📵" },
+    { msg: `My out-of-office reply is more creative than anything I've written all year.
+
+Priorities. ✈️` },
+    { msg: `We didn't need a 90-minute meeting to decide the font.
+
+But here we are. 🔤` },
+    { msg: `Our company values are: Integrity, Innovation, Collaboration.
+
+Our actual values are: Ctrl+C, Ctrl+V, Ctrl+Z. 💻` },
+    { msg: `Stakeholder: 'Can we just make it pop more?'
+
+Me, internally: 'Pop into what exactly.' 🎨` },
+    { msg: `The job posting said 'fast-paced environment.'
+
+They meant the deadlines are fast. The Wi-Fi is not. 🐢` },
+    { msg: `I have a meeting about the meeting that was scheduled to discuss the previous meeting's outcomes. 📅` },
+    { msg: `Corporate speak translation:
+
+'Let's take this offline' = I don't want to say this in front of everyone.
+'Circle back' = I forgot.
+'Let's align' = I disagree with you. 🗣️` },
+    { msg: `My calendar is so full I blocked time to look at my calendar. 🗓️` },
+    { msg: `Performance review season:
+
+Me all year: does work.
+Me during review: cannot recall a single accomplishment. 🧠` },
+    { msg: `The sprint is called a sprint because by the end of it you feel like you've been running for two weeks. 🏃` },
+    { msg: `We have a 'no blame culture.'
+
+The blame just comes with no name tag. 🏷️` },
+    { msg: `Deliverable. Synergy. Bandwidth. Leverage. Touch base. Deep dive.
+
+Corporate Mad Libs. 🎲` },
+    { msg: `I joined the company for the mission.
+
+I stayed for the free coffee.
+
+The coffee machine is broken. 😔` },
+    { msg: `Friday 4:55pm.
+
+New urgent request just dropped. 💣`, sub: 'Every Friday, without fail' },
+    { msg: `The person who scheduled the 8am meeting does not come in until 9. 🕗` },
+    { msg: `Annual company retreat: 'This is about you. Bring your authentic self.'
+
+Agenda: 6 hours of presentations. 📊` },
+    { msg: `Why did the project manager bring a ladder to the meeting?
+
+Because the expectations were too high. 🪜` },
+    { msg: `'We're like a family here.' 👨‍👩‍👧‍👦
+
+Families also have unspoken rules, difficult relatives, and someone who takes the last biscuit without asking.` },
+    { msg: `Hot take: 'Let me know if you have any questions' at the end of a 47-slide deck
+is not the same as actually answering questions. 🙋` },
+    { msg: `Quarterly planning meeting:
+
+Hour 1: What we planned last quarter.
+Hour 2: Why it didn't happen.
+Hour 3: Plan the same things again. 🔄` },
+    { msg: `Why do Java developers wear glasses?
+
+Because they don't C#. 👓` },
+    { msg: `A QA engineer walks into a bar.
+Orders 0 beers.
+Orders 99 beers.
+Orders -1 beers.
+Orders 2147483647 beers.
+Orders a lizard.
+Orders NULL beers.
+Orders asdfjkl; beers. 🍺`, sub: 'The test was: does the bar work' },
+    { msg: `The code worked perfectly until I showed it to someone. 💻` },
+    { msg: `Senior dev: 'This should be a simple fix.'
+
+Junior dev: *opens ticket 3 days later* 🧵` },
+    { msg: `There are 10 types of people in the world:
+Those who understand binary and those who don't. 0️⃣1️⃣` },
+    { msg: `Git blame.
+
+The tool that ruins friendships. 🔍` },
+    { msg: `My code doesn't have bugs.
+
+It has undocumented features. 🐛✨` },
+    { msg: `Real programmers count from 0.
+
+That's why my work-life balance starts at index 0 too: technically present, but nothing is loaded yet. 📭` },
+    { msg: `How to center a div:
+
+Step 1: Google 'how to center a div'
+Step 2: Open Stack Overflow
+Step 3: It's 2am and you've rewritten the entire layout. 😭` },
+    { msg: `The best comment in our codebase:
+
+// I have no idea why this works. Don't touch it. 🙏` },
+    { msg: `Naming things is the hardest problem in computer science.
+
+Behold: \`tempFinal_v3_FINAL_USE_THIS_real.js\` 📄` },
+    { msg: `Tech debt is just a polite way of saying
+'we made bad decisions and now they live here with us.' 🏚️` },
+    { msg: `Code review comment #1: 'Looks good to me!'
+Code review comment #2: 'Can you add a comment here?'
+Code review comment #3: 'This entire architecture needs to be reconsidered.' 😬` },
+    { msg: `Agile meeting #1: Sprint planning (2 hours)
+Agile meeting #2: Daily standup (30 mins)
+Agile meeting #3: Sprint review (1 hour)
+Agile meeting #4: Retrospective (1 hour)
+
+Time left for actual work: theoretically possible. 📉` },
+    { msg: `The documentation says: 'straightforward implementation.'
+
+The implementation: 400 lines of regex. 🤯` },
+    { msg: `me: this is the cleanest code I've ever written
+also me, 6 months later: who wrote this garbage 😤` },
+    { msg: `Error message: 'Something went wrong.'
+
+Thanks. Super helpful. Very descriptive. 10/10. 🙃` },
+    { msg: `The intern: 'Why don't we just rewrite it from scratch?'
+
+The senior: *visible flashback* 😰` },
+    { msg: `Production hotfix timeline:
+
+6pm: bug found
+7pm: fix deployed
+8pm: new bug
+9pm: original bug back
+10pm: pizza ordered 🍕` },
+    { msg: `localhost:3000 is my happy place.
+
+Everything works there. The world makes sense. 🌈` },
+    { msg: `Client: 'I'll know it when I see it.'
+
+Me: 👁️... 👁️... 👁️` },
+    { msg: `Client brief: 'Keep it simple. Clean. Minimal. Professional.'
+
+Client feedback: 'Can you add more things?' 🎠` },
+    { msg: `Client: 'This should only take 5 minutes, right?'
+
+It has never taken 5 minutes. Not once. In the history of all projects. ⏱️` },
+    { msg: `The client approved the design.
+
+The client's boss did not know about the design.
+
+The client's boss is now involved. 👔` },
+    { msg: `Client email at 6pm Friday:
+
+'Hi! Hope you had a great week. Just a quick one... 😊'
+
+It is never quick. 📨` },
+    { msg: `Client: 'Can we make the logo bigger?'
+
+Me: *makes logo 2px bigger*
+
+Client: 'Perfect. Just like that.' ✅` },
+    { msg: `Scope creep stages:
+1. Small change
+2. While we're at it...
+3. One more thing
+4. Actually, can we start over? 🌊` },
+    { msg: `Client: 'We need this by end of week.'
+
+Also client: *not available for review until end of week* 🗓️` },
+    { msg: `The client called it 'a minor tweak.'
+
+The engineer called it 'a fundamental architecture change.'
+
+They were both right. 🏗️` },
+    { msg: `Client: 'The competitor's site loads faster.'
+
+Their site: 3 pages, no images, built in 2004. Ours: real-time AI dashboard with 47 integrations.
+
+Fair comparison. 🏆` },
+    { msg: `Roses are red,
+the Jira board's blue,
+I moved the ticket to done,
+but we both know that's not true. 🎫` },
+    { msg: `Roses are red,
+standup's at nine,
+I'll say 'no blockers'
+but everything's fine. 🧘` },
+    { msg: `Roses are red,
+Slack ping at midnight,
+'Just a quick question' —
+I did not sleep right. 😴` },
+    { msg: `Roses are red,
+retro's today,
+I'll say 'communication'
+because what else do you say? 🗣️` },
+    { msg: `Roses are red,
+my PR got reviewed,
+47 comments —
+I guess I was wrong. 😅` },
+    { msg: `What do you call a fake noodle?
+
+An impasta. 🍝
+
+I'm not sorry.` },
+    { msg: `I told my computer I needed a break.
+
+Now it won't stop sending me Kit Kat ads. 🍫` },
+    { msg: `Our product roadmap is a journey.
+
+So is a labyrinth. Doesn't mean we know where we're going. 🗺️` },
+    { msg: `Why don't keyboards sleep?
+
+Because they have two shifts. ⌨️` },
+    { msg: `Client: 'Can we do a quick call?'
+
+The call: 90 minutes, 3 screen shares, 2 tangents, one existential pivot. 📞` },
+    { msg: `My GitHub contributions graph looks like my heart rate during a production incident. 📈💀` },
+    { msg: `Office kitchen rule:
+If it's in the fridge with no name, it belongs to everyone.
+If it has your name on it, it also belongs to everyone. 🍱` },
+    { msg: `We pivoted so many times this year
+we're basically a revolving door. 🚪` },
+    { msg: `Roses are red,
+violets are blue,
+the build is failing,
+and it worked yesterday too. 🔴` },
+    { msg: `Why did the developer quit?
+
+Because they didn't get arrays. 🛑` },
+    { msg: `The WiFi at the office:
+Strong enough for a video call.
+Not strong enough for the video call to stay stable.
+
+A paradox. 📶` },
+    { msg: `Me: 'I need 2 hours of focus time.'
+
+My calendar: 'Denied. You have 7 back-to-back meetings.' 📅` },
+    { msg: `Debugging is like being the detective
+in a crime movie where you're also the criminal. 🔍🕵️` },
+    { msg: `The best part of a hackathon:
+All the pizza.
+The worst part:
+Everything else after 2am. 🍕` },
+    { msg: `Why did the agile team go to therapy?
+
+Too many sprints, not enough recovery. 🏃‍♂️💆` },
+    { msg: `Our CI/CD pipeline has more stages than a Broadway show.
+And about the same number of unexpected script changes. 🎭` },
+    { msg: `I work in tech.
+I can automate your entire workflow.
+I cannot, however, find my keys. 🔑` },
+    { msg: `Stack Overflow went down for 20 minutes once.
+Developers the world over sat very, very still. 🫡` },
+    { msg: `The office printer only jams
+when you have something urgent to print.
+
+It is sentient. It chooses violence. 🖨️` },
+    { msg: `Roses are red,
+Spring is a framework,
+I wrote 800 lines,
+for a 'Hello World' remark. 🌱` },
+    { msg: `Why did the UX designer break up with the developer?
+
+Lack of communication and no clear user flow. 💔` },
+    { msg: `Manager: 'How's the timeline looking?'
+Dev: 'Depends.'
+Manager: 'On what?'
+Dev: 'Everything.' 🕐` },
+  ],
+
+  scold: [
+    { msg: "You just Googled something you already knew, didn't you?\n\nWe see you. 👁️", sub: "The productivity police" },
+    { msg: "That email has been sitting in your drafts for THREE DAYS.\n\nSend it. It's not that deep. 📧", sub: "Your future self" },
+    { msg: "You said 'just five more minutes' 45 minutes ago.\n\nGet. Back. To. Work. ⏰", sub: "The clock on the wall" },
+    { msg: "You opened 11 browser tabs and used exactly one.\n\nYou are a chaos agent. 🌀", sub: "RAM (it's crying)" },
+    { msg: "Stop color-coding your to-do list and actually DO the to-do list. 🎨\n\nOrganising is not the same as doing.", sub: "Tough love" },
+    { msg: "That meeting could've been an email.\n\nYou know it. I know it. Everyone knows it. 📅", sub: "Your colleagues, silently" },
+    { msg: "You've refreshed your inbox 7 times in the last hour.\n\nNo one is emailing you that urgently. 🔄", sub: "Email (exhausted)" },
+    { msg: "You have 847 unread notifications.\n\nThis is not a flex. Fix it. 🔔", sub: "Your phone, sobbing" },
+    { msg: "You wrote 'per my last email' in a response.\n\nWe are so proud and so terrified of you. 😈", sub: "Everyone in CC" },
+    { msg: "You just added a task to your list so you could immediately cross it off.\n\nTherapy. Consider it. ✅", sub: "Your therapist (future)" },
+    { msg: "It has been 2 hours and you still haven't taken a sip of that coffee.\n\nIt's stone cold. You deserve this. ☕", sub: "Cold brew, judging you" },
+    { msg: "You said 'I'll just clean up this code quickly.'\n\nTwo hours later, you're rewriting the entire thing.\n\nPredictable. 🔁", sub: "Every developer ever" },
+    { msg: `You pushed directly to main.
+
+We don't do that here.
+
+We don't do that ANYWHERE. 🚨`, sub: 'The CI/CD pipeline, screaming' },
+    { msg: `You said 'it works on my machine.'
+
+Congratulations. Ship your machine. 💻`, sub: 'DevOps, diplomatically' },
+    { msg: `Your variable is named 'data2'.
+
+Data2 what? Data2 who? We have questions. 📦`, sub: 'Future you, suffering' },
+    { msg: `You have 14 console.log statements in production.
+
+Pick them up. Right now. 🪵`, sub: 'The browser console, full' },
+    { msg: `The PR has been sitting in review for 4 days.
+
+Either it needs changes or it needs mercy. Either way — respond. 💬`, sub: 'The author, waiting' },
+    { msg: `You committed with the message 'fix.'
+
+Fix what? When? Why? For whom?
+
+'fix' is not a commit message. It is a cry for help. 🆘`, sub: 'Git history, judging you' },
+    { msg: `You copy-pasted the same block of code 6 times instead of writing a function.
+
+DRY stands for Don't Repeat Yourself.
+
+You're soaking wet. 💧`, sub: 'Clean code principles' },
+    { msg: `You said you'd write tests later.
+
+It's been 8 months.
+
+Later has not come. Later is a myth. ⏳`, sub: 'The QA team' },
+    { msg: `Your branch is called 'test2-final-use-this'.
+
+Merge it or kill it. There is no third option. 🌿`, sub: 'Git, exhausted' },
+    { msg: `You commented out code instead of deleting it.
+
+Version control exists. It will remember.
+
+Delete it. 🗑️`, sub: 'Every code review ever' },
+    { msg: `The README hasn't been updated since 2022.
+
+The setup instructions are wrong.
+
+You know they're wrong.
+
+Update. The. README. 📄`, sub: 'The new developer, lost' },
+    { msg: `You opened a PR at 5:58pm on a Friday.
+
+We see you. We will remember this. 📌`, sub: 'Your team, nervously' },
+    { msg: `You scheduled a 1-hour meeting and used 8 minutes of it.
+
+A Slack message would have done this. 💬`, sub: 'Everyone\'s calendar' },
+    { msg: `You asked a question in the meeting that was already answered in the document.
+
+The document you were sent.
+
+Three times. 📄`, sub: 'The document, sighing' },
+    { msg: `Your camera has been 'having issues' for 6 months.
+
+Internet-connected devices that cost $1,200 do not just perpetually have camera issues.
+
+We know. You know. Now we all know. 📷`, sub: 'Everyone on the call' },
+    { msg: `You joined the call 7 minutes late and asked 'did I miss anything?'
+
+Yes. Everything. That's how time works. ⏰`, sub: 'The agenda' },
+    { msg: `You're replying to an email chain from 3 weeks ago as if time hasn't passed.
+
+Time has passed.
+
+Please read the latest thread first. 📧`, sub: 'The 11 people in CC' },
+    { msg: `You said 'just to piggyback on what Sarah said' and then repeated exactly what Sarah said.
+
+Sarah said it. She said it well. You did not need to say it again. 🐷`, sub: 'Sarah' },
+    { msg: `You set up a recurring weekly meeting without a clear agenda.
+
+You have given everyone a recurring weekly dread.
+
+Add an agenda. 📋`, sub: 'Thursday 3pm' },
+    { msg: `You marked the email as high priority. 🔴
+
+It was not high priority.
+
+Now nothing feels like high priority.
+
+This is your fault.`, sub: 'The colour red' },
+    { msg: `You said 'yes' to the client before checking with the team.
+
+You have volunteered us all.
+
+We did not volunteer. 🙋`, sub: 'The team' },
+    { msg: `You promised a feature by Thursday.
+
+Thursday is tomorrow.
+
+You have not told the engineer yet.
+
+Tell the engineer. NOW. 🚨`, sub: 'Thursday' },
+    { msg: `You scheduled a demo before the feature was built.
+
+The demo is in 2 hours.
+
+This is not ideal. 🫠`, sub: 'The engineer, speed-running' },
+    { msg: `You called it a 'quick win' in the planning meeting.
+
+It was not a quick win.
+
+It was a 3-week project in a Halloween mask. 👻`, sub: 'The sprint board' },
+    { msg: `You said 'this is just a small change' in the requirements document.
+
+Small changes from documents become large tasks in reality.
+
+Be specific. Be honest. Be kind to the developers. 🛠️`, sub: 'Requirements, always lying' },
+    { msg: `You have 3 windows open, 2 Spotify tabs, a YouTube video paused at 4:12, and a half-written email.
+
+Close something. Anything. One thing. 🌀`, sub: 'Your RAM' },
+    { msg: `You said 'I work best under pressure'
+but you created this pressure yourself
+by not starting earlier.
+
+You don't work best under pressure.
+You just only work under pressure. ⏰`, sub: 'Honest feedback' },
+    { msg: `You've been 'almost done' for 3 hours.
+
+Almost done is not done.
+
+Almost done is not done. 🚧`, sub: 'The definition of done' },
+    { msg: `Your Slack status says 'In a meeting' but you're reading this right now.
+
+Update your status. Or don't. But own it. 🟡`, sub: 'Slack, watching' },
+    { msg: `You have not taken a lunch break in 4 days.
+
+Your brain is running on a granola bar and a grudge.
+
+Eat something real. 🥗`, sub: 'Your prefrontal cortex' },
+    { msg: `You sent a 'quick' Slack message with no context at 9pm.
+
+That message lived in someone's head rent-free until morning.
+
+Send full context or send nothing. 🌙`, sub: 'Async communication, 101' },
+    { msg: `You said you'd review that document 'by end of day' four days ago.
+
+'End of day' has ended. Multiple times.
+
+Review the document or reassign it. 📋`, sub: 'The author, checking in again' },
+    { msg: `You've attended every single meeting this week but done zero deep work.
+
+Attendance is not output.
+
+Block some focus time. 🧱`, sub: 'Your to-do list, neglected' },
+    { msg: `You replied to a group email with 'thanks!'
+
+And copied everyone.
+
+14 people got a notification.
+
+For 'thanks.'
+
+Think before you reply-all. 📨`, sub: '14 inboxes' },
+    { msg: `You estimated '2 days' and it's been a week.
+
+Estimation is a skill.
+
+Like all skills, it requires honesty with yourself. 📏`, sub: 'The sprint board' },
+    { msg: `You skipped writing the ticket description because 'everyone knows what this is.'
+
+Someone doesn't know what this is.
+
+That someone is you, in 3 weeks. 🎫`, sub: 'Future you, confused' },
+    { msg: `You've been in 'heads down mode' for 3 weeks.
+
+Your team doesn't know what you're working on.
+Your manager doesn't know.
+You barely know.
+
+Send an update. A short one. Today. 📣`, sub: 'Visibility matters' },
+    { msg: `You wrote the ticket title but left the description blank.
+
+A title is not a ticket.
+A ticket is a ticket.
+
+Fill it in. 🎫`, sub: 'The next developer' },
+    { msg: `You attended the retrospective and said everything was fine.
+
+Everything was not fine.
+
+Retros only work if you're honest in them. 🔁`, sub: 'The process, begging you' },
+    { msg: `You agreed to a deadline you knew was impossible.
+
+Now it's impossible and everyone is surprised.
+
+Speak up earlier next time. 📅`, sub: 'Future you' },
+    { msg: `Your code has no tests.
+
+'It works' is not a test.
+'I tested it manually' is not a test.
+
+Write tests. 🧪`, sub: 'The QA team' },
+    { msg: `You asked the same question in three different Slack channels.
+
+One would have been enough.
+
+One is always enough. 💬`, sub: 'Everyone who answered all three' },
+    { msg: `That technical debt you said you'd address 'next sprint'?
+
+It has compounded interest.
+It is now a small loan you owe the codebase.
+
+Pay it back. 💳`, sub: 'The architecture' },
+    { msg: `You deployed without telling anyone.
+Something broke.
+You quietly fixed it and told no one.
+
+This is a pattern.
+Break the pattern. 🔔`, sub: 'The incident log' },
+    { msg: `You copied that code from Stack Overflow without reading what it does.
+
+It works for now.
+It will confuse you in 4 months.
+
+Read what you paste. 📋`, sub: 'Stack Overflow, not apologising' },
+    { msg: `You have been saying 'I'll refactor this later' since Q1.
+
+It is Q4.
+
+Later is not a calendar entry. 🗑️`, sub: 'The codebase' },
+    { msg: `Your local environment is a snowflake.
+It only works on your machine because of 14 undocumented steps you did 8 months ago.
+
+Document them. Please. 🌨️`, sub: 'Your future replacement' },
+    { msg: `You hard-coded the API key.
+
+We don't hard-code API keys.
+We have environment variables for this.
+
+Fix it. Now. 🔑`, sub: 'Security, having a moment' },
+    { msg: `You have 3 WIP items in the sprint.
+
+WIP limits exist for a reason.
+
+Finish one thing before starting another. 🚦`, sub: 'Kanban basics' },
+    { msg: `You escalated to leadership before trying to resolve it with the other team directly.
+
+This could have been a 10-minute call.
+
+Try the 10-minute call first. ☎️`, sub: 'The leadership team, also sighing' },
+    { msg: `You spent 4 hours making the internal dashboard look beautiful.
+
+No one asked for beautiful.
+They asked for accurate.
+
+Ship accurate. Polish later. 🎨`, sub: 'The product owner' },
+    { msg: `Your standup update was 8 minutes.
+
+Standup updates should be 90 seconds.
+
+Yesterday / today / blockers.
+
+That's it. ⏱️`, sub: 'Everyone standing' },
+    { msg: `You merged without squashing.
+The commit history is now a novel.
+
+Squash your commits.
+Keep the history clean. 📖`, sub: 'The git log' },
+    { msg: `You used a global variable where a local one would do.
+
+Everything is accessible from everywhere.
+Nothing is predictable.
+
+Scope your variables. 🌍`, sub: 'The next bug report' },
+    { msg: `You reviewed that PR in 45 seconds.
+
+It was 400 lines.
+
+You did not review that PR. 👀`, sub: 'Code quality' },
+    { msg: `You're writing the same boilerplate in every file.
+
+That's what templates and utils are for.
+
+DRY. Still. Always. 🔁`, sub: 'Clean code, patiently' },
+    { msg: `Client asked a question you didn't know the answer to.
+
+You guessed.
+
+Never guess with clients.
+
+'Let me confirm and come back to you' is always the right answer. ✅`, sub: 'Trust, which is fragile' },
+    { msg: `The client's message has been on read for 2 days.
+
+Acknowledge it even if you don't have the full answer yet.
+
+'Noted, working on it' takes 5 seconds. ⏱️`, sub: 'The client, wondering' },
+    { msg: `You said 'we can definitely do that' in a client call without checking first.
+
+We couldn't definitely do that.
+
+Always check first. Always. 🛑`, sub: 'The engineer who had to do it' },
+    { msg: `You have 4 browser profiles.
+
+None of them have the passwords.
+
+All of them have 30 tabs open.
+
+Close some tabs. Any tabs. 🗂️`, sub: 'Your RAM, crying again' },
+    { msg: `You scheduled a meeting for a problem that could have been solved with a shared doc.
+
+Create the shared doc.
+
+Let people comment asynchronously.
+
+Meetings are for things async can't solve. 📝`, sub: 'Async culture' },
+    { msg: `You haven't updated your team on the blocked ticket.
+
+It has been blocked for 5 days.
+
+Say something. Unblock it or escalate it. 🧱`, sub: 'The sprint board' },
+    { msg: `You sent a message that said 'can I ask you something?'
+
+And then waited for a reply before asking.
+
+Just ask the thing. People can reply when they're free. 💬`, sub: 'Async messaging 101' },
+    { msg: `Your function does 7 things.
+
+A function should do one thing.
+
+Split it. 🔪`, sub: 'The single responsibility principle' },
+    { msg: `You used a Boolean where an enum would have made everything clearer.
+
+Now there are 4 possible states and you have 2 possible flags.
+
+Model your domain properly. 📐`, sub: 'The bug that\'s coming' },
+    { msg: `You skipped the code review because 'it was a small change.'
+
+The production incident was caused by a small change.
+
+All changes go through review. 🔍`, sub: 'The postmortem' },
+    { msg: `You said you'd send the meeting notes.
+
+There are no meeting notes.
+
+The meeting was two weeks ago.
+
+Send the notes. Or admit there are no notes. Either is acceptable. The silence is not. 📋`, sub: 'Everyone who was in that meeting' },
+    { msg: `You're checking your phone during 1-on-1s.
+
+Your 1-on-1 is someone's dedicated time with you.
+
+Put the phone face-down. Be present. 📵`, sub: 'The person across from you' },
+    { msg: `You haven't taken a day off in 6 weeks.
+
+You think this makes you look committed.
+
+It makes you look like you can't delegate or disconnect.
+
+Take the day off. 🏖️`, sub: 'Sustainable performance' },
+    { msg: `You keep saying you'll document the architecture 'when things calm down.'
+
+Things do not calm down.
+
+Document it now, while you still remember why you made those decisions. 📖`, sub: 'Your future self' },
+    { msg: `You gave feedback that was vague.
+
+'This needs improvement' is not feedback.
+
+'The second paragraph is unclear because...' is feedback.
+
+Be specific. Be kind. Be useful. 💬`, sub: 'The person who needed more' },
+    { msg: `You promised a delivery date without building in any buffer.
+
+Buffer is not padding. Buffer is professionalism.
+
+Add buffer. Always add buffer. 🧱`, sub: 'Project management fundamentals' },
+    { msg: `You wrote a 400-word Slack message.
+
+This was a 2-sentence Slack message.
+
+Edit before sending. 📝`, sub: 'Your reader\'s attention span' },
+    { msg: `You pushed a hotfix without writing a postmortem.
+
+The same bug will come back.
+
+Postmortems prevent reruns. Write it. 📄`, sub: 'The incident that\'s coming' },
+    { msg: `You gave an estimate without breaking the work down first.
+
+The estimate was wrong.
+
+Estimates made without breakdown are always wrong.
+
+Break it down. Then estimate. 📏`, sub: 'Sprint planning' },
+    { msg: `You attended the design review but didn't read the designs beforehand.
+
+You gave feedback based on a 30-second skim.
+
+Read the materials. Respect the process. 🎨`, sub: 'The designer who prepared' },
+    { msg: `You haven't replied to that Slack message and it's been 48 hours.
+
+Even 'on it' or 'will follow up by Friday' keeps the trust intact.
+
+Send something. 💬`, sub: 'The person who\'s still waiting' },
+    { msg: `You said 'LGTM' on a PR that had an obvious naming inconsistency.
+
+You were in a hurry.
+
+In a hurry is when mistakes get merged.
+
+Slow down for reviews. 🐢`, sub: 'Code quality' },
+    { msg: `You have 12 browser tabs of documentation open.
+
+You've read none of them fully.
+
+Pick one. Read it. Close the rest. 📚`, sub: 'Your focus' },
+    { msg: `You've been saying 'we should do a knowledge transfer' for 3 months.
+
+The person leaving is leaving in 2 weeks.
+
+Schedule it. Now. 📅`, sub: 'Institutional knowledge, walking out the door' },
+    { msg: `Your PR description just says 'fixes bug.'
+
+Which bug?
+What caused it?
+How did you fix it?
+How did you test it?
+
+Write the description. 📝`, sub: 'The reviewer' },
+    { msg: `You keep context-switching every 20 minutes.
+
+Deep work requires 90+ minutes of uninterrupted focus.
+
+Block your calendar. Close Slack. Do the work. 🧱`, sub: 'Deep work, by Cal Newport (just read it)' },
+    { msg: `You sent the file as an attachment instead of a link.
+
+Now there are 6 versions floating in 6 inboxes.
+
+Use shared drives. One source of truth. 📁`, sub: 'Version control, not just for code' },
+    { msg: `You asked a question in a meeting that you could have answered by Googling it for 30 seconds.
+
+Try Googling first.
+
+Then ask. 🔍`, sub: 'Everyone\'s time' },
+    { msg: `You've been 'thinking about' giving that feedback for 3 weeks.
+
+Delayed feedback loses its value fast.
+
+Say the thing. Kindly. Clearly. Now. 💬`, sub: 'The person who\'d benefit from hearing it' },
+    { msg: `You wrote a unit test that tests the mock, not the code.
+
+Congratulations. You've proven the mock works.
+
+Test the actual behaviour. 🧪`, sub: 'Testing principles' },
+    { msg: `You joined the retrospective, said nothing, and then complained about the same issues in a side conversation after.
+
+Say it in the retro.
+
+That's what retros are for. 🔁`, sub: 'The retrospective format' },
+    { msg: `You introduced a new dependency without checking the license.
+
+Licenses matter. Legal matters.
+
+Check before you add. ⚖️`, sub: 'Your legal team (please)' },
+    { msg: `The linter is failing.
+
+You committed anyway with '--no-verify'.
+
+The linter is not your enemy. It is your friend who noticed something.
+
+Fix the lint errors. 🔍`, sub: 'The CI pipeline' },
+  ],
+
+  motivate: [
+    { msg: "You don't have to be perfect to be amazing.\n\nShow up. That's already more than most. 🌟" },
+    { msg: "The gap between where you are and where you want to be is called 'work.'\n\nYou're already here. Keep going. 🚀" },
+    { msg: "Done is better than perfect.\n\nShip the thing. Improve it after. ✅" },
+    { msg: "Every expert was once a beginner who refused to quit.\n\nYou are in the middle of your becoming. 🌱" },
+    { msg: "The version of you from 3 years ago would be genuinely impressed by where you are now.\n\nRemember that. 🪞" },
+    { msg: "You've survived 100% of your hard days so far.\n\nYour track record is flawless. 💯" },
+    { msg: "Small steps, taken consistently, outpace giant leaps taken rarely.\n\nOne thing today is enough. 👣" },
+    { msg: "Clarity comes from action, not from thinking about action.\n\nStart messy. Start now. ⚡" },
+    { msg: "The work you do in private is what determines the results you get in public.\n\nKeep building. 🏗️" },
+    { msg: "Tired is not the same as broken.\n\nRest. Then return. You've got this. 🛌➡️🔥" },
+    { msg: "No one remembers the days they felt ready.\n\nThey remember the days they did it anyway. 🎯" },
+    { msg: "Your potential is not a destination — it's a direction.\n\nJust keep facing it. 🧭" },
+    { msg: "Hard work compounds.\n\nSo does rest.\n\nSo does kindness to yourself.\n\nChoose all three. 💙" },
+    { msg: `You didn't understand that concept today.
+You will understand it by next week.
+You will explain it to someone else by next month.
+
+This is how it always goes. Keep going. 🔁` },
+    { msg: `Every senior engineer has a repository full of embarrassing old code.
+
+Your embarrassing old code means you've grown.
+
+Keep creating things worth cringing at later. 💻` },
+    { msg: `The bug you've been stuck on for 3 hours is going to feel so obvious when you find it.
+
+And then you'll be better at spotting it next time.
+
+You're always building skill, even when it doesn't feel like it. 🐛` },
+    { msg: `Reading documentation counts as work.
+Researching before you build counts as work.
+Thinking quietly at your desk counts as work.
+
+Deep thought is not visible. It is still real. 🧠` },
+    { msg: `You don't have to know everything.
+You have to know how to find things,
+how to ask good questions,
+and how to not give up.
+
+That's the whole job. 🔍` },
+    { msg: `Code review comments are not personal attacks.
+They are someone investing time in making the codebase better.
+And in you.
+
+Receive feedback like a professional. Grow like a champion. 🏆` },
+    { msg: `The feature you built six months ago is quietly working in production right now.
+Serving users.
+Doing its job.
+
+You built that. 🚀` },
+    { msg: `Learning a new framework feels overwhelming for the first two weeks.
+Familiar by month two.
+Comfortable by month four.
+
+You have done this before. You will do it again. 📈` },
+    { msg: `You don't need permission to have an opinion in the meeting.
+
+You were invited because your perspective matters.
+
+Use it. 🗣️` },
+    { msg: `The presentation you're nervous about giving is going to be fine.
+
+Everyone in that room wants you to succeed.
+They're not looking for you to fail.
+
+Breathe. Present. 🎤` },
+    { msg: `Saying 'I don't know, but I'll find out' is one of the most credible things you can say at work.
+
+It beats guessing confidently every single time. 🎯` },
+    { msg: `You've been in that meeting and not spoken because you thought your question was too basic.
+
+Someone else had the same question.
+
+Ask it. Do everyone a favour. 🙋` },
+    { msg: `Careers are not straight lines.
+
+They're messy, recursive, iterative things — exactly like the code you write.
+
+And exactly like code, they get better with each revision. 🔄` },
+    { msg: `The colleague you admire didn't start knowing what they know now.
+
+They started exactly where you are.
+
+Exact same place. Same uncertainty. Same impostor feeling.
+
+Now look at them. 👀` },
+    { msg: `You've been promoted once.
+You will be promoted again.
+You will surprise yourself with what you're capable of.
+
+Just don't stop showing up. 📅` },
+    { msg: `Getting a hard piece of feedback is uncomfortable for a day.
+Ignoring it is uncomfortable for a career.
+
+Lean into it. 💬` },
+    { msg: `Your first draft of anything — code, email, proposal — is supposed to be rough.
+
+First drafts exist to be improved.
+
+Write the rough version. Then fix it. ✏️` },
+    { msg: `Handling a difficult client conversation calmly is one of the hardest professional skills to master.
+
+And you did it.
+
+That wasn't nothing. That was everything. 🤝` },
+    { msg: `The client who was frustrated last month is happy now.
+That turnaround happened because of how you handled it.
+
+That's evidence. Of you. At your best. 📊` },
+    { msg: `Delivering honest, well-framed feedback to a client who doesn't want to hear it — and doing it without losing the relationship —
+
+is diplomacy.
+
+You're more capable than you think. 🕊️` },
+    { msg: `You can't control the scope change.
+You can control your response to the scope change.
+
+And your response today was measured, professional, and excellent. 🧘` },
+    { msg: `When you disagree with a decision at work and still deliver it well:
+
+That's maturity.
+That's trust.
+That's the kind of thing people get promoted for. 💼` },
+    { msg: `The project was delayed. Not because of you.
+You kept things together when they could have fallen apart.
+
+That often goes unnoticed. Consider it noticed. 🔦` },
+    { msg: `You are not behind.
+
+You are at a different point in a different journey.
+
+Compare less. Build more. 🏗️` },
+    { msg: `Rest is not a reward for finishing everything.
+
+Rest is what makes finishing things possible.
+
+Schedule it. Take it. Mean it. 🌙` },
+    { msg: `The skills you've built this year would have impressed you 3 years ago.
+
+Let that land. 🎯` },
+    { msg: `You don't have to enjoy every part of the job.
+
+You just have to do the hard parts well.
+
+And you do. 💪` },
+    { msg: `Today doesn't have to be your best work.
+
+Some days you just maintain.
+Maintaining is not failing.
+
+Maintaining is keeping the lights on until inspiration shows back up. 💡` },
+    { msg: `The reason you're tired is that you care.
+
+People who don't care aren't tired.
+
+Your tiredness is evidence of your investment.
+
+Now rest. 🛌` },
+    { msg: `You asked for help today.
+
+That took more strength than solving it alone.
+
+Good engineers know when to ask.
+
+You're a good engineer. 🤝` },
+    { msg: `The version of the product that ships is always different from the version you imagined.
+
+That's not failure.
+
+That's collaboration. That's how good things get made. ✨` },
+    { msg: `Someone on your team learned something from you this week.
+
+You may not know which thing.
+
+You may not know who.
+
+But it happened. 🌱` },
+    { msg: `There will be a day when a junior engineer looks at your career and feels the same quiet awe you feel when you look at a senior engineer now.
+
+You're building towards that day. 🔭` },
+    { msg: `The meeting where you finally spoke up and pushed back on the bad idea?
+
+That took guts.
+
+Guts are worth cultivating. 💪` },
+    { msg: `You picked up a ticket no one wanted.
+You figured it out.
+You didn't complain.
+
+That is professionalism.
+And it doesn't go unnoticed by the people who matter. 👀` },
+    { msg: `You've learned more in the past year than you realise.
+
+You can't see the growth while you're in it.
+
+But look back 12 months. Really look.
+
+You're different. Better. More capable. 📈` },
+    { msg: `Writing clean, well-documented code that the next developer can understand:
+
+That's generosity.
+That's professionalism.
+That's the mark of a great engineer. 🤝` },
+    { msg: `Shipping something imperfect that helps people
+is more valuable than perfecting something forever that ships never.
+
+Ship. Iterate. Improve. 🚀` },
+    { msg: `You handled that stakeholder expectation conversation carefully.
+
+That balance — honest but diplomatic, firm but respectful —
+
+that's a senior skill. You just used it. 🎯` },
+    { msg: `The junior engineer asked you a question today.
+
+You answered it thoughtfully.
+You made them feel okay about not knowing.
+
+That kind of mentorship shapes careers. 🌱` },
+    { msg: `You read the documentation before asking for help.
+
+That sounds small.
+To a busy senior developer, it is enormous.
+
+Keep doing that. 📖` },
+    { msg: `A great system design is one that's still maintainable a year later.
+
+You've been building with maintainability in mind.
+
+Future you — and future teammates — will thank you. 🏗️` },
+    { msg: `You flagged the problem before it became a production incident.
+
+Proactive flagging is unglamorous, invisible, and absolutely critical.
+
+You saved everyone something today. 🚦` },
+    { msg: `You apologised when you got it wrong.
+
+That's rarer than it should be.
+And it builds more trust than always being right ever could. 🤍` },
+    { msg: `The sprint was hard. The requirements changed mid-way.
+You adapted without drama.
+
+Adaptability under ambiguity is the skill.
+
+You have it. 🌊` },
+    { msg: `You asked for a longer deadline instead of overpromising.
+
+That is courage.
+That is experience talking.
+
+Keep trusting your estimates. ⏱️` },
+    { msg: `You wrote a postmortem that was honest about your own contribution to the issue.
+
+That level of accountability raises the floor for everyone.
+
+You made the team better today. 📝` },
+    { msg: `You showed up to standup on a hard day.
+
+Not every day is full energy. Some days you just show up.
+
+Showing up is its own kind of strength. 📅` },
+    { msg: `You're not supposed to enjoy every task.
+
+You're supposed to do every task well.
+
+There's dignity in doing the unglamorous things excellently. 💼` },
+    { msg: `A career in tech means constantly being a beginner at new things.
+
+The fact that it's uncomfortable means you're in new territory.
+
+New territory is where growth lives. 🗺️` },
+    { msg: `You stayed calm in the incident call.
+
+When things break and everyone's watching, staying calm is a service to the team.
+
+You provided that service. 🧘` },
+    { msg: `You gave credit to someone else in the meeting.
+
+Generosity with credit is rare and valued.
+
+People remember who lifts them up. 🌟` },
+    { msg: `You updated the documentation without being asked.
+
+Unasked-for improvements to shared systems are invisible acts of care.
+
+The next person who reads that doc will be glad you existed. 📚` },
+    { msg: `The feature took longer than expected.
+But it's solid, tested, and deployed cleanly.
+
+Quality over speed is a trade-off worth making sometimes.
+
+You made the right call. ✅` },
+    { msg: `You mentored someone this week.
+You probably don't think of it as mentoring.
+You just helped.
+
+Helping is mentoring.
+You're doing it already. 🤲` },
+    { msg: `The reason you feel uncertain sometimes is that you're working at the edge of your competence.
+
+The edge of competence is where competence expands.
+
+Stay at the edge. 🔭` },
+    { msg: `You wrote a migration script that was boring, careful, and correct.
+
+Boring and correct is the goal.
+Boring and correct keeps production running.
+
+Underrated work. Genuinely. 🛠️` },
+    { msg: `The project you thought would never end?
+
+It ended.
+
+Things that feel permanent almost never are. ⏳` },
+    { msg: `You pushed back on a technical decision because you knew the tradeoffs.
+
+Not to be difficult.
+Because you cared about doing it right.
+
+That's engineering. 🔧` },
+    { msg: `You pair-programmed today and it felt slow.
+
+Pair programming feels slow and is actually fast.
+Two brains catch what one misses.
+
+Keep pairing. 👥` },
+    { msg: `You took on the legacy code nobody wanted to touch.
+
+That's the job nobody glamorises and everyone depends on.
+
+You're keeping the lights on. Thank you. 💡` },
+    { msg: `You're still learning this framework.
+You're still learning this codebase.
+You're still learning this industry.
+
+All three are lifelong endeavours.
+
+You're exactly where you should be. 🌱` },
+    { msg: `You disagreed in the design discussion.
+You made your case.
+The team went a different direction.
+You built it anyway, and built it well.
+
+That's professionalism in one sentence. 🤝` },
+    { msg: `Client was unhappy.
+You listened.
+You didn't get defensive.
+You fixed it.
+
+That loop — listen, absorb, fix — is the whole job sometimes.
+
+You ran it well. 🔄` },
+    { msg: `Some problems at work don't have perfect solutions.
+
+They just have better and worse trade-offs.
+
+Choosing the better trade-off, clearly, calmly, and deliberately —
+
+that's engineering maturity. ⚖️` },
+    { msg: `You wrote a clear, concise email that covered all the points without rambling.
+
+Underestimated skill.
+Powerful in practice.
+
+Keep writing clearly. ✉️` },
+    { msg: `You made the boring choice: the tried-and-true library, the simple approach, the clear variable name.
+
+Boring choices compound.
+
+Boring choices become reliable systems. 🏛️` },
+    { msg: `Your code review comment was constructive.
+Kind.
+Specific.
+
+That's how you raise the level of the whole team.
+
+One review at a time. 👏` },
+    { msg: `You identified the root cause and not just the symptom.
+
+Root cause analysis is a discipline.
+
+You just practised it.
+
+Keep going deeper. 🔬` },
+    { msg: `You broke the big problem into small, completable tasks.
+
+That's it.
+That's the skill.
+Every large project is just that, repeated.
+
+You know how to do this. ✂️` },
+    { msg: `You didn't abandon the problem when it got hard.
+
+You sat with the discomfort.
+You kept thinking.
+You found a path forward.
+
+That persistence is the difference. 🧗` },
+    { msg: `You set a boundary this week — said no to something, redirected a timeline, protected your focus.
+
+Boundaries are a professional skill.
+
+You used it. 🚧` },
+    { msg: `You made someone's work easier today without even knowing it.
+
+Maybe with a comment.
+Maybe with a clear handoff.
+Maybe with a message that arrived at the right time.
+
+You have more impact than you track. 💙` },
+    { msg: `It's okay that today was maintenance, not innovation.
+
+Innovation needs a stable base to run on.
+
+You built the base today. 🧱` },
+    { msg: `Soft skills compound too.
+
+Every hard conversation you handled well,
+every email you took time to write clearly,
+every team member you made feel heard —
+
+they add up. 📊` },
+    { msg: `You haven't given up.
+
+In an industry that cycles fast, demands fast, and changes fast —
+
+not giving up is genuinely remarkable.
+
+Keep going. 🔥` },
+    { msg: `You're solving problems today that would have completely stumped you 2 years ago.
+
+You probably don't notice that.
+
+But it's true. ✨` },
+    { msg: `The release went smoothly.
+Because you tested carefully.
+Because you communicated clearly.
+Because you caught the edge case in review.
+
+Smooth releases don't happen by accident. 🚢` },
+    { msg: `You work in a field where what you build can outlast the conversation you had about it.
+
+Your code is running somewhere right now.
+
+That's kind of remarkable. 🌍` },
+    { msg: `You made a mistake, acknowledged it quickly, and fixed it.
+
+That loop is faster and more valuable than never making mistakes.
+
+Ownership and speed of recovery matter more than perfection. ♻️` },
+    { msg: `You asked the dumb question.
+The question that unlocked a 2-hour debate that led to a better design.
+
+The dumb question was the smart question all along. 🤔` },
+    { msg: `People on your team feel comfortable asking you things.
+
+That means you've created safety.
+That's leadership.
+
+Even without the title. 🌟` },
+    { msg: `The hardest part of this job isn't the code.
+It's the communication.
+The alignment.
+The expectation management.
+The uncertainty.
+
+You're navigating all of it.
+
+That deserves more credit than it gets. 🏅` },
+    { msg: `You did good work today.
+
+Not flashy.
+Not celebrated.
+Just good, solid, professional work.
+
+That is enough. That is more than enough. ✅` },
+    { msg: `There's a version of you that ships something this quarter that you'll look back on with real pride.
+
+You're building towards it.
+
+Keep building. 🔭` },
+    { msg: `The work you do behind the scenes — the cleanup, the docs, the small improvements — makes everyone else's work slightly easier.
+
+Slightly easier, multiplied across a team, is a lot. 🤝` },
+    { msg: `You're not stuck. You're between insights.
+
+The next thing you need to understand is already forming.
+
+Stay curious. It'll arrive. 💡` },
+  ],
+
+  lonely: [
+    { msg: "Hey.\n\nYou're not as invisible as you think.\nSomeone in this building is also sitting quietly, wishing someone would just say hi.\n\nMaybe be that person today. 🫂" },
+    { msg: "Loneliness at work is more common than the packed meeting calendar suggests.\n\nAlmost everyone is performing 'fine' while quietly wishing for one real conversation.\n\nYou're in good company. 💙" },
+    { msg: "Fun fact: the people who seem most connected at work are usually just better at hiding that they also eat lunch alone sometimes.\n\nYou're normal. 🥗" },
+    { msg: "The office plant near your desk?\n\nIt's been quietly rooting for you this whole time.\n\nLiterally. 🌱", sub: "Your plant, probably" },
+    { msg: "Here's a virtual fist bump. 👊\n\nNot a hug — we're professionals.\n\nBut definitely a fist bump. And a real nod." },
+    { msg: "You know that one colleague you always mean to properly talk to but never do?\n\nThis is the sign.\n\nSend the message. Grab the coffee. It's not weird. ☕" },
+    { msg: "Reminder:\n\nYou were someone's favourite part of a conversation once.\n\nProbably more than once.\n\nThey just didn't say it out loud. 🤍" },
+    { msg: "Being lonely doesn't mean you're unlikeable.\nIt usually means you're in the wrong room at the wrong time, surrounded by people who haven't figured you out yet.\n\nGive it a little more time. ⏳" },
+    { msg: "Some people are loud about their friendships.\nSome people are quiet about everything.\n\nBoth are valid.\nYou don't have to be everyone's person to matter to someone. 🌙" },
+    { msg: "One small thing:\n\nCompliment someone today. Genuinely. Not performatively.\n\nIt'll make them feel less lonely.\nAnd weirdly, it'll do the same for you. 💛" },
+    { msg: "Loneliness is just your brain saying it's ready for connection.\n\nYour brain is not broken. It's just hungry.\n\nFeed it. 🧠" },
+    { msg: "Roses are red,\nviolets are blue,\nI eat lunch at my desk,\nbut so do you. 🥺\n\nWe should eat together." },
+    { msg: `Remote work is amazing until 3pm on a Tuesday when you realise you haven't spoken to a human being today and the last thing you said out loud was 'thanks' to a delivery driver. 📦
+
+Text a friend. It's allowed.` },
+    { msg: `The hardest part of remote work isn't the meetings.
+
+It's the silence between the meetings.
+
+You don't have to sit in it. Reach out. 🎧` },
+    { msg: `Working from home means you never really leave work.
+And you never really arrive at work.
+You just... exist in the middle.
+
+That liminality is genuinely hard. Give yourself credit for showing up anyway. 🏠` },
+    { msg: `Your commute used to give you a transition — from home-you to work-you.
+
+Without it, those two versions bleed together.
+
+Take a walk before you start. Even 5 minutes. It helps. 🚶` },
+    { msg: `Loneliness in a distributed team isn't a personal failure.
+
+It's a design problem. The team wasn't designed for connection.
+
+You can be the one who redesigns it. Say hi in a channel. Start something. 💬` },
+    { msg: `Being new is disorienting in a way nobody warns you about.
+
+Everyone else has context you don't have.
+Every conversation assumes knowledge you haven't built yet.
+
+This fades. Give it 90 days. 📅` },
+    { msg: `If you feel like an outsider at work right now:
+
+You are not. You're just early.
+
+Every long-timer felt exactly this in their first few months. Exactly this. 🌱` },
+    { msg: `It's okay to not know who to eat lunch with yet.
+
+That part comes later.
+
+For now: just be present. The connections will happen. 🍱` },
+    { msg: `Being quieter than others in meetings doesn't mean you have nothing to offer.
+
+It means you think before you speak.
+
+That is a feature. Not a bug. 🤫` },
+    { msg: `Not everyone needs a crowd to feel okay.
+
+Some people just need one or two real conversations a day.
+
+That's a valid way to be. 🌿` },
+    { msg: `You don't have to be the most social person on the team.
+
+You just have to be real with the people you do connect with.
+
+Depth beats breadth. Every time. 🌊` },
+    { msg: `The one colleague you actually like talking to?
+
+They probably feel the same way about you.
+
+Tell them. Or don't — but know they'd be glad if you did. 💙` },
+    { msg: `The days when no one messages you are not evidence that you don't matter.
+
+They're just quiet days.
+
+Quiet days end. 🌤️` },
+    { msg: `You sat through that whole meeting and said nothing.
+
+And still, when you left, someone in that room was glad you were there.
+
+Presence is its own contribution. 🪑` },
+    { msg: `The work friendships that feel impossible to start?
+
+They almost always start with the same thing:
+
+'Hey, how was your weekend?'
+
+That's it. That's the whole door. 🚪` },
+    { msg: `It's okay to feel like you don't fully belong somewhere yet.
+
+Belonging is built, not assigned.
+
+And you're building it, even when it doesn't feel like it. 🧱` },
+    { msg: `Some of the best work relationships in your life
+haven't started yet.
+
+They're sitting two desks away, or in another time zone,
+just waiting for a reason to begin. ⏳` },
+    { msg: `You brought your full self to work today
+even though it was hard.
+
+That takes more courage than it looks like from the outside. 🦁` },
+    { msg: `If you're reading this during a quiet lunch:
+
+Hello. You're seen. You're doing okay.
+
+Now eat your food before it gets cold. 🍜` },
+    { msg: `Roses are red,
+I'm in a call,
+microphone's muted —
+nobody heard me at all. 🎤
+
+But I'm still here. That counts.` },
+    { msg: `Being surrounded by people and still feeling alone is one of the strangest feelings at work.
+
+It's also one of the most common.
+
+You're not uniquely broken. You're just having a human day. 🫂` },
+    { msg: `That person who always seems to have a full table at lunch?
+
+They also have days when they eat alone and stare at their phone.
+
+Everyone does. 📱` },
+    { msg: `The group chat moved fast today and you didn't say anything.
+
+That's fine.
+
+You don't have to perform to belong. 💬` },
+    { msg: `Maybe today you ask that colleague one genuine question.
+
+Not about work. About them.
+
+People remember being asked about themselves. 🧡` },
+    { msg: `The fact that you noticed you're lonely means something important:
+
+You want connection.
+
+People who want connection tend to find it.
+
+Keep wanting it. 🔍` },
+    { msg: `Some days you're on the outside of every inside joke.
+Every reference flies over your head.
+Every group already has its shape.
+
+Those days pass. You start to be the inside. Give it time. 🌀` },
+    { msg: `The hardest part of being new is that everyone else's comfort
+makes your discomfort more visible.
+
+They're not excluding you.
+They just forgot what it felt like to be new.
+
+You'll forget too, eventually. 🌱` },
+    { msg: `You can be competent, kind, and good at your job
+and still feel invisible at work.
+
+Invisibility is not a verdict on your worth.
+It's just a phase you haven't grown through yet. 👻` },
+    { msg: `One good conversation can change the entire feel of a week.
+
+You only need one.
+
+Go find it. 🗣️` },
+    { msg: `The colleague who always seems busy and unapproachable?
+
+They have the same fear of being annoying that you have of approaching them.
+
+Approach anyway. 🚶` },
+    { msg: `Loneliness isn't always about not having people around.
+
+Sometimes it's about not being truly seen.
+
+Find one person who sees you accurately. That's the whole goal. 🔍` },
+    { msg: `You moved cities for this job.
+Left your people.
+Built a career in a place where you know no one.
+
+That is one of the hardest things a person can do.
+
+And you did it. Give yourself enormous credit. 🌆` },
+    { msg: `Working across time zones means
+you celebrate alone when something ships.
+You debug alone when things break.
+You're just... alone, a lot.
+
+That's real. It counts as hard. 🌏` },
+    { msg: `The coffee run you didn't get invited to:
+
+It probably wasn't intentional.
+People fall into habits without meaning to exclude.
+
+Next time, say 'I'm grabbing coffee, anyone want anything?' Be the inviter. ☕` },
+    { msg: `The chat group you're not in yet:
+
+Those form organically.
+They form around repeated proximity, shared humour, coincidence.
+
+You can't rush it.
+But you can be around. 💬` },
+    { msg: `The office has geography.
+Certain desks orbit each other.
+Certain kitchens create connections.
+
+Pick your spot deliberately.
+Sit near the energy you want to be part of. 📍` },
+    { msg: `Every office has its unofficial social architect:
+The person who plans the lunch, suggests the game, starts the thread.
+
+You could be that person.
+It takes one message. 🏗️` },
+    { msg: `You don't need everyone to like you.
+
+You need a small handful of people who get you.
+
+Quality over volume.
+
+Everytime. 💙` },
+    { msg: `The new person always wonders if they made the right choice.
+
+The answer is usually: yes, but not yet.
+
+'Not yet' is a timeline, not a verdict. 📅` },
+    { msg: `Being introverted at work isn't a disadvantage.
+It means you listen more than you speak.
+You think before you act.
+You build fewer but deeper connections.
+
+Those connections tend to last longer. 🌊` },
+    { msg: `You didn't raise your hand in the meeting.
+
+That's okay.
+
+Next time, raise it once.
+Just once.
+See what happens. 🙋` },
+    { msg: `That one person who always says hello in the hallway:
+
+They're choosing to see you.
+Let them.
+Say hi back.
+Let it be the beginning of something. 👋` },
+    { msg: `The virtual background you chose for calls:
+
+It's a tiny act of self-expression.
+A tiny way of saying 'I am a person with taste and preferences.'
+
+You're communicating more than you think. 🖼️` },
+    { msg: `You left the company outing early.
+
+That's fine.
+You went.
+You showed up.
+
+Showing up, even briefly, counts. 🚪` },
+    { msg: `The reason you haven't made work friends yet isn't that you're unfriendly.
+
+It's usually that you haven't had the right repeated collision.
+
+Collisions happen over time. Be patient. 🎱` },
+    { msg: `The person you think is judging you in the meeting:
+
+They're thinking about what they're going to have for lunch.
+
+Almost no one is watching as closely as you think. 🍱` },
+    { msg: `Friday afternoon office quiet:
+
+You and 4 other people left in the building.
+The vibe is oddly companionable.
+Nobody talks, but you're all in it together.
+
+That's a kind of connection too. 🌇` },
+    { msg: `You ate lunch alone again.
+
+Some of the best thinking happens at solo lunches.
+Some of the best rest.
+Some of the best reading.
+
+Alone doesn't have to mean lonely. 🍜` },
+    { msg: `The colleague who messaged to check on you after a tough call:
+
+Remember them.
+Be that person for someone else.
+Circles of care form when people start them. 💌` },
+    { msg: `Being seen at work means being willing to let people see you.
+
+A small disclosure. A genuine answer to 'how are you?'.
+A real opinion offered.
+
+Vulnerability is the opening. 🔓` },
+    { msg: `You have more in common with your colleagues than the work stuff.
+
+The book they mentioned.
+The show they referenced.
+The frustration they voiced.
+
+Pick one thread. Pull it. See where it goes. 🧵` },
+    { msg: `The team lunch you didn't go to because you were 'too busy':
+
+You were not too busy.
+
+The lunch was the work. Connection is the work.
+
+Go next time. 🍽️` },
+    { msg: `Loneliness at work often peaks around month 3–6.
+
+You understand the job but not yet the people.
+You're no longer new but not yet settled.
+
+This is the hardest stretch.
+It's also the one most people push through. 📈` },
+    { msg: `You sent a meme to a colleague.
+They reacted with a laugh.
+
+That is the beginning of something.
+More than you think. 😄` },
+    { msg: `The person who remembered how you take your coffee:
+
+Hold onto them.
+Be that person for someone else.
+The small acts of noticing are how belonging is built. ☕` },
+    { msg: `You've been the new person before.
+
+You figured it out then.
+
+You'll figure it out now. 🔄` },
+    { msg: `Today you could send one message that isn't work-related.
+
+Just one.
+To one person.
+
+'How was your weekend?' is a door.
+You don't need a grand reason to open it. 🚪` },
+    { msg: `The team you're on right now:
+
+Some of them might become the people you call when something big happens.
+
+It doesn't feel that way yet.
+
+But those relationships often start in offices exactly like this one. 🌱` },
+    { msg: `Feeling lonely doesn't mean something went wrong.
+
+It means you're a person who needs people.
+
+All the best ones do. 💙` },
+    { msg: `The colleague you keep meaning to get to know:
+
+Today is a good day for that.
+
+Not tomorrow.
+Today. 📅` },
+    { msg: `The fact that you opened this button says something.
+
+It says you're honest with yourself.
+
+Honesty with yourself is the beginning of doing something about it.
+
+Do something small about it today. 🫂` },
+    { msg: `You're not behind on connection.
+
+You're just between chapters.
+
+The next one starts whenever you decide to turn the page. 📖` },
+    { msg: `Some loneliness at work is structural — it's the design of the space.
+Some is circumstantial — the wrong team, wrong timing.
+Some is solvable right now with one message.
+
+Figure out which kind this is. Then act accordingly. 🔍` },
+    { msg: `You made someone laugh at work today.
+
+You may not have noticed.
+
+They noticed. 😄` },
+    { msg: `Roses are red,
+the office is cold,
+but you make it warmer,
+or so I've been told. 🌸
+
+Meaning: you matter here, even when it doesn't feel that way.` },
+    { msg: `The people who seem to belong everywhere:
+
+They also had days when they didn't belong anywhere.
+
+Belonging is not a personality trait.
+It's a thing that accumulates.
+
+Keep accumulating. 🧩` },
+    { msg: `You brought your whole self to work in a culture that usually only wants part of you.
+
+That's brave.
+
+Don't stop. 🦁` },
+    { msg: `The work friend you don't have yet:
+
+Maybe they joined last month.
+Maybe they've been here for years and you haven't properly talked.
+Maybe they're on the other side of a Slack message you haven't sent.
+
+They exist. You'll find each other. 🔭` },
+    { msg: `The video call where nobody turned on their camera:
+
+Everyone wanted to. Nobody went first.
+
+Be the one who goes first. 📷` },
+    { msg: `Remote work means your relationship with colleagues is mediated by text.
+
+Words on a screen can still carry warmth.
+
+Choose warm words. 🌡️` },
+    { msg: `The lunch you keep eating at your desk:
+
+Occasionally, walk somewhere.
+Eat outside.
+Sit somewhere you don't usually sit.
+
+Change the scenery. See what changes. 🌤️` },
+    { msg: `Today, compliment something real about someone.
+
+Not their presentation.
+Not their output.
+
+Something about who they are.
+
+Watch how it lands. 💛` },
+    { msg: `The quiet person in your team:
+
+They might need exactly what you need.
+
+Check in. 🤍` },
+    { msg: `Being known at work takes time.
+
+First you're the new person.
+Then you're the person who does [thing].
+Then you're just... you.
+
+You're on the way to the last one. 📍` },
+    { msg: `The hardest kind of lonely is being alone in a room full of people.
+
+If that's where you are:
+
+Hang on. Those rooms change.
+Sometimes suddenly. 🌅` },
+    { msg: `You could be someone's favourite part of the workday.
+
+You might already be.
+
+They probably haven't said it.
+
+People are bad at saying things like that. 💙` },
+    { msg: `You don't have to be loud to be loved.
+
+You don't have to fill every room to matter in it.
+
+You just have to show up as yourself.
+
+Keep showing up. 🌱` },
+    { msg: `This week: one genuine question to one colleague.
+Not about a task.
+About them.
+
+That's the whole experiment.
+
+Run it. 🔬` },
+    { msg: `The office kitchen, the Slack watercooler channel, the team lunch:
+
+These are infrastructure for connection.
+Use the infrastructure. 🏗️` },
+    { msg: `You're here.
+You're trying.
+You turned up.
+
+That's not nothing.
+On a lonely day, that's everything. 🫂` },
+    { msg: `The colleague who remembers your name after one meeting:
+
+Be that colleague. Remember names.
+Names are the smallest possible act of seeing someone. 🏷️` },
+    { msg: `You've been helpful to people at work who never said thank you.
+
+They noticed.
+They just didn't say it.
+
+You mattered anyway. 🤍` },
+    { msg: `The group chat you're not part of yet isn't the whole story.
+
+Every group started as two people
+who found a reason to message each other.
+
+Be one of those two people with someone. 💬` },
+    { msg: `The after-work drink you said no to:
+
+Say yes once.
+Just once.
+See who shows up.
+
+You might surprise yourself. 🍻` },
+    { msg: `You've been kind to people who were having bad days without knowing it.
+
+Someone was grateful for you in a way you'll never hear about.
+
+Keep being kind anyway. 🌸` },
+    { msg: `The colleague who made you laugh once:
+
+That's a thread.
+
+Pull it. 🧵` },
+    { msg: `Loneliness peaks.
+And then it passes.
+And then it peaks again.
+
+This is the rhythm.
+You're not doing it wrong.
+
+You're just in the hard part. Keep going. 🌊` },
+    { msg: `Today, send one message with no agenda.
+
+No task attached.
+No ask at the end.
+
+Just: 'Hey, thought of you when I saw this.'
+
+That's connection. That's the whole thing. 💌` },
+  ],
+};
+
+const COLORS = {
+  entertain: '#f7c948',
+  scold:     '#ff6b6b',
+  motivate:  '#4ecdc4',
+  meme:      '#a78bfa',
+  lonely:    '#f9a8d4',
+};
+
+const LABELS = {
+  entertain: '😄 Joke time',
+  scold:     '😤 You need to hear this',
+  motivate:  '💪 Keep going',
+  meme:      '🎬 K-drama moment',
+  lonely:    '🫂 You\'re not alone',
+};
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function setCard(html, color) {
+  const out = document.getElementById('output');
+  out.style.borderColor = color + '66';
+  out.innerHTML = html;
+  out.classList.remove('has-content');
+  void out.offsetWidth; // reflow for animation
+  out.classList.add('has-content');
+}
+
+async function go(type) {
+  const color = COLORS[type];
+  const label = LABELS[type];
+
+  if (type === 'meme') {
+    setCard(`<div class="loader"></div><p class="sub" style="margin-top:1rem">Fetching K-drama meme… 🎬</p>`, color);
+
+    // ── kdrama text memes (fallback pool) ────────────────────────────────────
+    const kdramaMemes = [
+      { msg: "K-drama logic:\nEpisode 1–14: Push and pull, misunderstandings, almost-kisses.\nEpisode 15: They finally confess.\nEpisode 16: Timeskip. Marriage. The end. 😭", sub: "Every K-drama ever" },
+      { msg: "The ML after standing in the rain for 10 minutes:\n\n'I think I caught a cold.'\n\nThe FL, already knowing:\n\n'Let me make you porridge.' 🍚", sub: "K-drama episode 9, always" },
+      { msg: "K-drama male lead personality options:\n\n① Cold CEO with a secret heart\n② Cold doctor with a secret heart\n③ Cold chaebol with a secret heart\n④ Cold chef with a secret heart\n\nAll roads lead to cold. ❄️", sub: "The K-drama character factory" },
+      { msg: "No one:\n\nK-drama OST:\n\n🎵 'Even if the worlddd endsss... I will find youuu...' 🎵\n\nMe at 2am, sobbing into my ramen. 🍜", sub: "My ears, betraying me" },
+      { msg: "K-drama hospital scenes:\n- IV drip: standard\n- White sheets: mandatory\n- One single tear rolling down face: required\n- FL grabs ML's hand: peak drama\n- Doctor: 'He needs rest.' FL: stays 72 hours anyway. 🏥", sub: "Medical accuracy: 0/10" },
+      { msg: "K-drama wrist grab count per episode:\n\nEp 1–3: 2–3 grabs\nEp 4–8: 4–6 grabs\nEp 9–12: wrist grab + forehead kiss combo\nEp 13–16: holding hands voluntarily (character growth) 🤝", sub: "A scientific analysis" },
+      { msg: "K-drama second male lead:\nHandsome ✅\nKind ✅\nAlways available ✅\nActually communicates feelings ✅\nGets the girl: ❌\n\nLife is not fair. 💔", sub: "Second lead syndrome, a support group" },
+      { msg: "What I say: 'Just one more episode.'\n\nWhat I mean: 'I will watch until the sun rises and then be useless at work tomorrow.' 🌅", sub: "Me, every Friday" },
+      { msg: "K-drama plot twist bingo:\n☑ Birth secret\n☑ Amnesia\n☑ Terminal illness (cured by love)\n☑ Evil stepmom\n☑ They were childhood friends ALL ALONG\n\nFull house. Again. 🎰", sub: "K-drama writers' room" },
+      { msg: "K-drama FL job options:\n① Clumsy but lovable food truck owner\n② Clumsy but lovable graphic designer\n③ Clumsy but lovable journalist\n④ Clumsy but lovable… anything\n\nThe clumsy is non-negotiable. 🥲", sub: "HR at every K-drama company" },
+    { msg: `K-drama office edition:
+
+The cold CEO walks past your desk.
+Your eyes meet for 0.3 seconds.
+OST plays.
+
+You have a quarterly review with him tomorrow. 😳`, sub: 'Corporate romance loading...' },
+    { msg: `K-drama character development:
+
+Episode 1: 'I don't need anyone.'
+Episode 8: 'Why does my heart hurt when I don't see them?'
+Episode 12: Runs through the rain.
+Episode 16: Holding hands at sunset.
+
+All of this could have been resolved with a text in episode 2. 📱` },
+    { msg: `The K-drama FL eating ramyeon alone at 1am after a hard day:
+
+That's not sad. That's the most relatable human experience ever depicted on screen. 🍜
+
+I also eat ramyeon alone. I also feel things deeply. We are the same.` },
+    { msg: `K-drama villain breakdown:
+
+'I did all of this... because of you.'
+
+Sir. You embezzled from a corporation, faked a death, and relocated to Jeju.
+
+This was not caused by one person. This was a whole journey. 🧳` },
+    { msg: `K-drama plot armour:
+
+- Gets hit by a car: fine in episode 3
+- Falls off a building: hospitalized for 1 episode
+- Heartbreak: entire 6-episode arc
+
+The writers have priorities. 💔` },
+    { msg: `K-drama elevator scenes:
+
+Two people enter.
+Door closes.
+Musical sting.
+2 floors.
+Both stare straight ahead.
+
+Nothing is said.
+Everything is felt.
+
+This is 4 minutes of screen time. 🛗` },
+    { msg: `Me watching K-drama at 1am:
+
+'Just one more episode.'
+
+Me at 3am:
+
+'I have irrevocably restructured my sleep schedule around fictional Korean people and I have no regrets.' 😌` },
+    { msg: `K-drama mom tier list:
+
+S: Warm, supportive, actually helpful
+A: Overbearing but means well
+B: Conveniently absent
+C: The obstacle
+D: The reveal villain
+
+All are iconic. All are necessary. 🏆` },
+    { msg: `K-drama: the only genre where
+a man holding an umbrella over someone
+is peak romance. ☂️
+
+No words. No grand gesture. Just umbrella.
+
+Perfect.` },
+    { msg: `The K-drama second lead:
+
+Always knew how she took her coffee.
+Remembered every small thing she ever said.
+Showed up. Every time.
+
+Got the ending credits. Not the girl. 💔
+
+We light a candle for him every rewatch.` },
+    { msg: `K-drama logic:
+
+Character has cancer.
+Character falls in love.
+Cancer: reconsidering... 🤔
+
+Love is apparently also a treatment protocol.` },
+    { msg: `K-drama female lead job description:
+
+Must be: hardworking, lovable, clumsy exactly once per episode, able to look beautiful while crying, and terrible at accepting help.
+
+Salary: the male lead's entire emotional arc. 💼` },
+    { msg: `K-drama airport scene:
+
+Flight: boarding
+Security line: long
+The male lead: running
+
+He makes it.
+He always makes it.
+
+In real airports this results in being stopped by staff and missing the flight anyway. ✈️` },
+    { msg: `Watching K-drama at work pretending to be on a call:
+
+Co-worker: 'Are you okay? You look emotional.'
+
+Me: 'I'm fine. The presentation is just very moving.' 📊` },
+    { msg: `K-drama fashion rule:
+
+The colder the ML's personality,
+the more expensive his coat.
+
+Emotional unavailability and good tailoring: always together. 🧥` },
+    { msg: `K-drama rule #47:
+
+If the ML and FL share an umbrella,
+they will end up together.
+
+No exceptions have ever been recorded in 30 years of Korean television. ☂️` },
+    { msg: `K-drama pacing:
+
+Episode 1–10: They cannot stand each other.
+Episode 11: Accidental hand touch. OST swells.
+Episode 12–16: Now they are soulmates.
+
+The math works out. Somehow. 🎵` },
+    { msg: `The K-drama cold open:
+
+*flash forward to character crying in the rain*
+
+Viewer: What happened??
+
+*theme song plays for 90 seconds*
+
+Viewer: WHAT HAPPENED` },
+    { msg: `Kdrama logic:
+
+The FL is broke, clumsy, works three jobs, accidentally offends the richest man in Korea,
+falls on him,
+and then moves into his house for unrelated reasons.
+
+This is a love story. 💸` },
+    { msg: `You: I should sleep.
+
+KDrama: *starts the next episode automatically*
+
+You: This is fine. 😌
+
+*It is 3:47am*` },
+    { msg: `K-drama villain motivation tier list:
+
+S: Generational trauma + valid grievance mishandled
+A: Wants money / power / revenge
+B: Just jealous of the FL for no reason
+C: Never given a backstory, just evil
+
+All are compelling. All will monologue. 🎭` },
+    { msg: `K-drama chemistry explained:
+
+They stood too close in episode 3.
+Now every scene they're in together is electrically charged.
+
+The writing didn't do this.
+The actors did.
+
+Honour the actors. 👏` },
+    { msg: `The K-drama hospital cafeteria:
+
+Where characters go to have the most important conversations of their lives
+over uneaten food.
+
+No one ever eats the food. 🥘` },
+    { msg: `K-drama friendship:
+
+Best friend of FL is always:
+- funnier than FL
+- more sensible than FL
+- ships FL and ML harder than anyone
+- not given enough screen time
+
+We want more of the best friend. The people have spoken. 👯` },
+    { msg: `The K-drama rooftop scene:
+
+Something about being above the city
+makes every confession weightier,
+every breakup more devastating,
+every reconciliation more earned.
+
+Architecture as narrative device. 🌃` },
+    { msg: `K-drama male lead eating ramyeon with FL at 1am:
+
+This is the most domestically intimate scene in the show.
+
+Not the kiss.
+
+The ramyeon. At 1am. In the kitchen. In comfortable silence. 🍜` },
+    { msg: `K-drama OST drop timing:
+
+First 4 episodes: 4 songs
+Episode 5–10: 3 songs
+Episode 11–14: 2 songs, one is devastating
+Episode 15–16: THE song.
+You will cry. You will not know why until the third listen. 🎶` },
+    { msg: `K-drama corporate arc:
+
+The company is always corrupt.
+The CEO is always the villain.
+The humble employee will dismantle it all.
+
+This is fantasy and also cathartic. 💼` },
+    { msg: `K-drama time skip:
+
+*3 years later*
+
+Everyone is:
+- slightly richer
+- hair changed
+- emotionally resolved
+- married probably
+
+3 years of growth, 90 seconds of screen time. A bargain. ⏩` },
+    { msg: `The K-drama 'are you okay?' check-in:
+
+ML: Are you okay?
+FL: *is clearly not okay*
+FL: I'm fine.
+ML: *sits beside her in silence*
+
+This is the right answer.
+No further questions.
+Just... sits beside her. 🪑` },
+    { msg: `K-drama product placement:
+
+They make drinking a particular brand of banana milk
+the most romantic act in the entire series.
+
+I now associate banana milk with love.
+
+Marketing: complete. 🍌` },
+    { msg: `The K-drama forehead kiss:
+
+More intimate than any other gesture.
+More loaded with meaning.
+Handed out only at peak emotional moments.
+
+A forehead kiss in episode 14 ends wars. ☮️` },
+    { msg: `K-drama 'I'll take responsibility' moment:
+
+ML does something that puts FL in a difficult position.
+
+ML: 'I'll take responsibility.'
+
+Everyone in the room: 👀
+Everyone watching: 😭
+
+This line carries the entire show.` },
+    { msg: `K-drama elevator moment part 2:
+
+*elevator door opens*
+*both reach for the button at the same time*
+*hands touch*
+*stare*
+*door closes on them*
+
+3 episodes of tension in 12 seconds. 🛗` },
+    { msg: `Me rewatching a K-drama I've already seen:
+
+'I know exactly what's going to happen.'
+
+*cries anyway at episode 9*
+
+The emotions were real both times. 😭` },
+    { msg: `K-drama fashion vs. reality:
+
+ML: perfectly tailored coat, crisp shirt, effortless hair
+ML's job: startup founder working 20-hour days
+
+This man has a personal stylist the show isn't acknowledging. 🧥` },
+    { msg: `The K-drama 'almost kiss' counter:
+
+Episode 6: 1
+Episode 8: 2
+Episode 10: 3
+Episode 11: *actual kiss*
+
+The wait made it worth it.
+The wait always makes it worth it. 💋` },
+    { msg: `K-drama final episode pacing:
+
+First 50 minutes: all remaining conflict resolved
+Last 10 minutes: epilogue. babies. time skip. everyone happy.
+Final 3 minutes: *the song*
+
+You will stare at the credits and feel something profound and unexplainable. 🌅` },
+    { msg: `Watching K-drama with subtitles:
+
+You've now absorbed enough Korean to understand
+'annyeong', 'saranghae', 'ramyeon meokko gallae?'
+
+The important vocabulary. 🇰🇷` },
+    { msg: `K-drama second couple:
+
+Sometimes funnier than the main couple.
+Sometimes more emotionally satisfying.
+Always the relief from the main couple's unresolved tension.
+
+The second couple carries the show. Don't @ me. 👫` },
+    { msg: `K-drama rule: if it rains, something important is about to happen.
+
+Conversely: if nothing has happened in 3 episodes, wait for rain. ☔` },
+    { msg: `The 'I was going to leave but then I saw you' airport save:
+
+Physically impossible given boarding times.
+Emotionally perfect.
+Unanimously accepted by all fans as valid. ✈️` },
+    { msg: `K-drama filming locations:
+
+Han River: for walking feelings
+Rooftop: for confessing feelings
+Hospital: for almost losing feelings
+Cafe: for hiding feelings
+
+Each location has a feeling. The map is consistent. 🗺️` },
+    { msg: `K-drama logic: if the ML and FL accidentally sleep in the same bed,
+they will argue about it for 2 episodes
+and be married by episode 16.
+
+The bed knows. The bed has always known. 🛏️` },
+    { msg: `K-drama friendship confession:
+
+Best friend: 'I knew you liked him from episode 2.'
+FL: 'I didn't even know in episode 2!'
+Best friend: 'I know. That's how I knew.' 👯
+
+Best friend deserves a spin-off.` },
+    { msg: `K-drama childhood trauma:
+
+Almost every ML was abandoned/hurt/lost as a child.
+
+This explains the emotional walls,
+the inability to trust,
+and the 8-episode arc where the FL patiently dismantles those walls.
+
+Therapy could have helped. Love also helped. 🧱💔` },
+    { msg: `The K-drama piggyback:
+
+FL is tired/hurt/drunk.
+ML carries her on his back.
+
+Nothing romantic is said.
+
+This is the most romantic scene in the show.
+
+Every. Single. Time. 🤧` },
+    { msg: `K-drama confession styles ranked:
+
+S: 'I like you. Do you like me?'
+A: Grand gesture + right music
+B: Confession in the rain (classic)
+C: Accident confession, panics, takes it back
+D: Confesses. Runs away. Does not follow up for 3 episodes.
+
+All valid. All iconic. 💬` },
+    { msg: `K-drama recipe:
+
+1 cold but secretly warm ML
+1 bright but secretly sad FL
+1 second lead who deserved better
+1 best friend who ships it
+1 misunderstanding that could be solved by talking
+16 episodes of not talking about it
+
+Serve with OST. Yield: emotions. 📺` },
+    { msg: `Me when the K-drama ends:
+
+[Stage 1] It's over.
+[Stage 2] I need a moment.
+[Stage 3] Let me read the entire recap wiki at 2am.
+[Stage 4] Rewatch the ending.
+[Stage 5] Find the next drama.
+[Stage 6] It is 4am.
+
+🌙` },
+    { msg: `K-drama office romance:
+
+They hate each other because of a misunderstanding.
+They work together anyway.
+They eat lunch alone together.
+They share an umbrella once.
+
+That's it. That's the whole plot.
+
+It's perfect. 🏢💕` },
+    { msg: `K-drama winter episode:
+
+*light snow begins to fall*
+*characters pause mid-argument*
+*look up*
+*everything is soft now*
+*OST enters*
+
+Korean drama directors understand that snow fixes everything. ❄️` },
+    { msg: `K-drama character growth arc in one image:
+
+Ep 1: 😤
+Ep 4: 😑
+Ep 8: 😐
+Ep 12: 🥺
+Ep 14: 🥹
+Ep 16: 🥰
+
+Emoji-based character development. The artform. 📊` },
+    { msg: `The K-drama 'I don't like you' phase:
+
+This phase is 8 episodes.
+This phase has more romantic tension than most dramas have in their entire run.
+
+Hate is just love that hasn't figured itself out yet.
+
+The writers know this. 🔄` },
+    ];
+
+    // ── Reddit image fetch ────────────────────────────────────────────────────
+    // Reddit blocks direct cross-origin fetch, so we try a free CORS proxy.
+    // On GitHub Pages (HTTPS) this works reliably.
+    const subreddits = ['KDRAMAmemes', 'KDRAMA', 'koreanvariety', 'kdramarecommends'];
+    const sub = pick(subreddits);
+    const redditUrl = `https://www.reddit.com/r/${sub}/hot.json?limit=100&raw_json=1`;
+    // Free CORS proxies — tried in order until one works
+    const PROXIES = [
+      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+    ];
+
+    let redditPost = null;
+
+    const urlsToTry = [redditUrl, ...PROXIES.map(p => p(redditUrl))];
+    for (const url of urlsToTry) {
+      try {
+        const res = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!res.ok) continue;
+        const json = await res.json();
+        const posts = (json?.data?.children || [])
+          .map(c => c.data)
+          .filter(p =>
+            !p.is_video &&
+            !p.stickied &&
+            p.url &&
+            /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(p.url)
+          );
+        if (posts.length) {
+          redditPost = pick(posts);
+          redditPost._sub = sub;
+          break;
+        }
+      } catch (_) {}
+    }
+
+    if (redditPost) {
+      setCard(`
+        <div class="label" style="color:${color}">🎬 r/${escHtml(redditPost._sub)}</div>
+        <p class="message">${escHtml(redditPost.title)}</p>
+        <img src="${escHtml(redditPost.url)}" alt="${escHtml(redditPost.title)}" />
+        <p class="sub">👍 ${redditPost.ups.toLocaleString()} &nbsp;·&nbsp; r/${escHtml(redditPost._sub)}</p>
+      `, color);
+    } else {
+      // Text meme fallback — always works, offline-safe
+      const item = pick(kdramaMemes);
+      setCard(`
+        <div class="label" style="color:${color}">🎬 K-drama moment</div>
+        <p class="message">${escHtml(item.msg).replace(/\n/g, '<br/>')}</p>
+        ${item.sub ? `<p class="sub">— ${escHtml(item.sub)}</p>` : ''}
+      `, color);
+    }
+    return;
+  }
+
+  const pool = CONTENT[type];
+  if (!pool) return;
+  const item = pick(pool);
+  const msgHtml = escHtml(item.msg).replace(/\n/g, '<br/>');
+  const subHtml = item.sub ? `<p class="sub">— ${escHtml(item.sub)}</p>` : '';
+
+  setCard(`
+    <div class="label" style="color:${color}">${label}</div>
+    <p class="message">${msgHtml}</p>
+    ${subHtml}
+  `, color);
+}
+
+function escHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
+         
