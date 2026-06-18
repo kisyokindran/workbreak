@@ -2439,13 +2439,12 @@ Hate is just love that hasn't figured itself out yet.
 The writers know this. 🔄` },
     ];
 
-    // ── Reddit image fetch ────────────────────────────────────────────────────
-    // Reddit blocks direct browser fetches (CORS). We route through allorigins.win,
-    // a free server-side proxy that works from any HTTPS origin (e.g. GitHub Pages).
+    // ── Reddit image fetch via allorigins.win proxy ───────────────────────────
+    // Direct Reddit fetch always fails (CORS). allorigins.win fetches server-side
+    // and works from any HTTPS origin (GitHub Pages). No key needed.
     const subreddits = ['KDRAMAmemes', 'KDRAMA', 'koreanvariety', 'kdramarecommends'];
     const sub = pick(subreddits);
-
-    // Try both www and old.reddit — old.reddit sometimes responds better via proxy
+    // Prefer image-heavy subreddits; use both www and old.reddit for resilience
     const redditUrls = [
       `https://www.reddit.com/r/${sub}/hot.json?limit=100&raw_json=1`,
       `https://old.reddit.com/r/${sub}/hot.json?limit=100&raw_json=1`,
@@ -2462,14 +2461,22 @@ The writers know this. 🔄` },
         const json = await res.json();
         const posts = (json?.data?.children || [])
           .map(c => c.data)
-          .filter(p =>
-            !p.is_video &&
-            !p.stickied &&
-            p.url &&
-            /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(p.url)
-          );
+          .filter(p => {
+            if (p.is_video || p.stickied) return false;
+            // Accept direct image URLs
+            if (p.url && /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(p.url)) return true;
+            // Also accept posts with a Reddit preview image
+            if (p.post_hint === 'image') return true;
+            if (p.preview?.images?.[0]?.source?.url) return true;
+            return false;
+          });
         if (posts.length) {
           redditPost = pick(posts);
+          // Resolve best image URL: prefer direct, fall back to preview
+          if (!/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(redditPost.url)) {
+            const preview = redditPost.preview?.images?.[0]?.source?.url;
+            if (preview) redditPost.url = preview.replace(/&amp;/g, '&');
+          }
           redditPost._sub = sub;
         }
       } catch (_) {}
